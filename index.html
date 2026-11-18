@@ -145,7 +145,7 @@ const KEY='pagos-renta-v1';
 let S={cfg:{inq:'',dueno:'',dir:'',monto:0},pagos:[],next:1};
 try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);S=Object.assign(S,o);S.cfg=Object.assign({inq:'',dueno:'',dir:'',monto:0},o.cfg||{})}}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const API='PEGA_AQUI_LA_URL_DE_APPS_SCRIPT';
+const API='https://script.google.com/macros/s/AKfycbyJzTkDd5kLHB4zpZUno2QzjO3w-c6f5rL9YH5mJOpkpHJ_kFzRGG_jTy2zVuI4sK8z/exec';
 let PIN='';try{PIN=localStorage.getItem('pagos-renta-pin')||''}catch(e){}
 let loaded=false,dupKey=null;
 async function api(body){
