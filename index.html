@@ -148,10 +148,11 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const API='https://script.google.com/macros/s/AKfycbyJzTkDd5kLHB4zpZUno2QzjO3w-c6f5rL9YH5mJOpkpHJ_kFzRGG_jTy2zVuI4sK8z/exec';
 let PIN='';try{PIN=localStorage.getItem('pagos-renta-pin')||''}catch(e){}
 let loaded=false,dupKey=null;
+
 async function api(body){
   const r = await fetch(API, {
     method: 'POST',
-    redirect: 'follow', // <-- ESTO ES LO QUE EVITA EL BLOQUEO
+    redirect: 'follow',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(Object.assign({ pin: PIN }, body))
   });
@@ -159,7 +160,9 @@ async function api(body){
   if(!j.ok) throw new Error(j.error || 'Error');
   return j;
 }
+
 const setSync=(t,bad)=>{const e=$('sync');e.textContent=t;e.style.color=bad?'var(--bad)':''};
+
 async function load(){
   setSync('Sincronizando…');
   try{
@@ -174,6 +177,7 @@ async function load(){
     setSync('Sin conexión con la nube. Ves la última copia guardada. No registres pagos hasta reconectar. Detalle: '+err.message,true);
   }
 }
+
 async function addPago(d){
   const m=$('addmsg');m.style.color='';m.textContent='Guardando…';
   try{
@@ -183,16 +187,20 @@ async function addPago(d){
     year=+d.mes.slice(0,4);filter=d.mes;renderAll();showRec(j.pago);
   }catch(err){m.style.color='var(--bad)';m.textContent=err.message==='PIN'?'PIN incorrecto. Cámbialo abajo.':'No se pudo guardar. El pago NO quedó registrado. Detalle: '+err.message}
 }
+
 async function delPago(id){
   try{await api({action:'del',id});S.pagos=S.pagos.filter(x=>x.id!==id);delId=null;save();renderAll()}
   catch(err){delId=null;renderList();setSync('No se pudo borrar. Detalle: '+err.message,true)}
 }
+
 async function saveCfg(c){
   const m=$('cfgmsg');m.style.color='';m.textContent='Guardando…';
   try{await api({action:'cfg',cfg:c});S.cfg=c;save();if(!$('f-monto').value&&c.monto)$('f-monto').value=c.monto;m.textContent='Datos guardados.';setTimeout(()=>m.textContent='',2500);renderAll()}
   catch(err){m.style.color='var(--bad)';m.textContent='No se pudieron guardar. Detalle: '+err.message}
 }
+
 function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+
 function renderPend(){
   const el=$('pend'),ini=S.cfg.inicio;
   if(!ini){el.innerHTML='<p class="empty">Escribe en “Datos de la renta” el mes en que empezó para ver qué meses faltan por pagar.</p>';return}
@@ -201,6 +209,7 @@ function renderPend(){
   while((y<cy||(y===cy&&m<=cm))&&out.length<600){const k=y+'-'+pad(m);if(stateOf(k)!=='si')out.push(k);m++;if(m>12){m=1;y++}}
   el.innerHTML=out.length?'<p class="empty">Estos meses no aparecen pagados completos. Toca uno para registrarlo.</p><div class="chips">'+out.map(k=>'<button class="small" data-act="pm" data-k="'+k+'">'+esc(label(k))+'</button>').join('')+'</div>':'<p class="empty">Todos los meses desde '+esc(label(ini).toLowerCase())+' hasta hoy están pagados.</p>';
 }
+
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money=n=>'RD$ '+Number(n||0).toLocaleString('es-DO',{maximumFractionDigits:2});
@@ -255,7 +264,7 @@ function renderList(){
   else{arr=arr.filter(p=>p.mes.startsWith(year+'-'));$('lt').textContent='Pagos de '+year+' (total '+money(arr.reduce((a,p)=>a+p.monto,0))+')'}
   arr.sort((a,b)=>b.mes.localeCompare(a.mes)||b.fecha.localeCompare(a.fecha));
   if(!arr.length){
-    $('list').innerHTML='<p class="empty">'+(filter?'No hay pagos registrados para '+esc(label(filter).toLowerCase())+'. Ese mes no aparece pagado.':'Aún no hay pagos registrados en '+year+'.')+'</p>'+(filter?'':'');
+    $('list').innerHTML='<p class="empty">'+(filter?'No hay pagos registrados para '+esc(label(filter).toLowerCase())+'. Ese mes no aparece pagado.':'Aún no hay pagos registrados en '+year+'.')+'</p>';
     return;
   }
   $('list').innerHTML=(filter?'<p style="margin:0 0 6px"><button class="small" data-act="all">Ver todo el año</button></p>':'')+arr.map(p=>
@@ -282,7 +291,7 @@ function showRec(p){
 
 function copy(text,okEl,okMsg){
   const done=()=>{okEl.textContent=okMsg;setTimeout(()=>okEl.textContent='',2500)};
-  const fb=()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');done()}catch(e){okEl.textContent='No se pudo copiar. Selecciona el texto manualmente.'}t.remove()};
+  const fb=()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');done()}catch(e){okEl.textContent='No se pudo copiar.'}t.remove()};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fb)}else fb();
 }
 
@@ -301,25 +310,23 @@ document.addEventListener('click',e=>{
   else if(a==='yprev'){year--;filter=null;renderGrid();renderList()}
   else if(a==='ynext'){year++;filter=null;renderGrid();renderList()}
   else if(a==='rec'){const p=S.pagos.find(x=>x.id==b.dataset.id);if(p)showRec(p)}
-  else if(a==='del'){
-    const id=+b.dataset.id;
-    if(delId===id){delPago(id)}
-    else{delId=id;renderList()}
-  }
+  else if(a==='del'){const id=+b.dataset.id;if(delId===id){delPago(id)}else{delId=id;renderList()}}
   else if(a==='close'){$('modal').classList.remove('open')}
   else if(a==='shareimg'){if(curRec)shareImg(curRec)}
   else if(a==='saveimg'){if(curRec)saveImg(curRec)}
   else if(a==='wa'){if(curRec){const w=window.open('https://wa.me/?text='+encodeURIComponent(recText(curRec)),'_blank');if(!w)copy(recText(curRec),$('recmsg'),'Recibo copiado. Pégalo en WhatsApp.')}}
-  else if(a==='copyrec'){if(curRec)copy(recText(curRec),$('recmsg'),'Recibo copiado. Pégalo en un mensaje.')}
+  else if(a==='copyrec'){if(curRec)copy(recText(curRec),$('recmsg'),'Recibo copiado.')}
   else if(a==='cfg'){saveCfg({inq:$('c-inq').value.trim(),dueno:$('c-dueno').value.trim(),dir:$('c-dir').value.trim(),monto:parseFloat($('c-monto').value)||0,inicio:$('c-inicio').value})}
   else if(a==='pm'){$('f-mes').value=b.dataset.k;$('f-mes').scrollIntoView({behavior:'smooth',block:'center'})}
-  else if(a==='print'){try{window.print()}catch(err){$('recmsg').textContent='No se pudo imprimir. Usa Guardar imagen.'}}
+  else if(a==='print'){try{window.print()}catch(err){$('recmsg').textContent='Usa Guardar imagen.'}}
   else if(a==='csv'){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const rows=[['Recibo','Mes','Fecha de pago','Monto','Entregado a','Nota']].concat(S.pagos.slice().sort((a,b)=>a.mes.localeCompare(b.mes)||a.fecha.localeCompare(b.fecha)).map(p=>[pad4(p.no),p.mes,p.fecha,p.monto,p.recibe,p.nota]));dl(new Blob(['\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}),'pagos-renta.csv')}
   else if(a==='login'){PIN=$('pin').value.trim();if(!PIN)return;try{localStorage.setItem('pagos-renta-pin',PIN)}catch(err){}load()}
   else if(a==='reload'){load()}
   else if(a==='logout'){PIN='';try{localStorage.removeItem('pagos-renta-pin')}catch(err){}$('app').hidden=true;$('login').hidden=false;$('pin').value='';$('loginmsg').textContent=''}
 });
+
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&PIN&&loaded&&!$('app').hidden)load()});
+
 function recBlob(p){
   const c=S.cfg,W=600,P=28,F='24px system-ui,sans-serif',B='bold 24px system-ui,sans-serif';
   const cv=document.createElement('canvas'),x=cv.getContext('2d');
@@ -335,18 +342,21 @@ function recBlob(p){
   y+=56;x.fillRect(P,y,W-2*P,2);x.font='20px system-ui,sans-serif';x.fillText('Firma de quien recibe',P,y+8);
   return new Promise(r=>cv.toBlob(r,'image/png'));
 }
+
 async function saveImg(p){
   try{dl(await recBlob(p),'recibo-'+pad4(p.no)+'.png');$('recmsg').textContent='Imagen guardada.'}catch(err){$('recmsg').textContent='No se pudo guardar la imagen.'}
 }
+
 async function shareImg(p){
   const m=$('recmsg');
   try{
     const file=new File([await recBlob(p)],'recibo-'+pad4(p.no)+'.png',{type:'image/png'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Recibo de renta'});return}
     if(navigator.share){await navigator.share({text:recText(p)});return}
-    m.textContent='Compartir no está disponible aquí. Usa Guardar imagen o WhatsApp (texto).';
-  }catch(err){if(!err||err.name!=='AbortError')m.textContent='No se pudo compartir desde aquí. Usa Guardar imagen o WhatsApp (texto).'}
+    m.textContent='Usa Guardar imagen o WhatsApp (texto).';
+  }catch(err){if(!err||err.name!=='AbortError')m.textContent='Usa Guardar imagen o WhatsApp (texto).'}
 }
+
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').classList.remove('open')});
 
 function init(){
@@ -355,7 +365,8 @@ function init(){
   $('c-inq').value=S.cfg.inq;$('c-dueno').value=S.cfg.dueno;$('c-dir').value=S.cfg.dir;$('c-monto').value=S.cfg.monto||'';$('c-inicio').value=S.cfg.inicio||'';
   renderAll();
 }
-if(API.startsWith('PEGA')||!PIN){$('app').hidden=true;$('login').hidden=false;if(API.startsWith('PEGA'))$('loginmsg').textContent='Falta pegar la URL de Apps Script en la constante API del archivo.'}else{loaded=true;init();load()}
+
+if(API.startsWith('PEGA')||!PIN){$('app').hidden=true;$('login').hidden=false;if(API.startsWith('PEGA'))$('loginmsg').textContent='Falta pegar la URL.'}else{loaded=true;init();load()}
 </script>
 </body>
 </html>
