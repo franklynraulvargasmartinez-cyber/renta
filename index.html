@@ -166,7 +166,7 @@ async function load(){
   }catch(err){
     if(err.message==='PIN'){$('app').hidden=true;$('login').hidden=false;$('loginmsg').textContent='PIN incorrecto.';return}
     $('login').hidden=true;$('app').hidden=false;if(!loaded){loaded=true;init()}
-    setSync('Sin conexión con la nube. Ves la última copia guardada. No registres pagos hasta reconectar.',true);
+    setSync('Sin conexión con la nube. Ves la última copia guardada. No registres pagos hasta reconectar. Detalle: '+err.message,true);
   }
 }
 async function addPago(d){
@@ -176,16 +176,16 @@ async function addPago(d){
     S.pagos.push(j.pago);S.next=j.pago.no+1;save();
     m.textContent='';$('f-nota').value='';
     year=+d.mes.slice(0,4);filter=d.mes;renderAll();showRec(j.pago);
-  }catch(err){m.style.color='var(--bad)';m.textContent=err.message==='PIN'?'PIN incorrecto. Cámbialo abajo.':'No se pudo guardar. El pago NO quedó registrado. Revisa tu conexión e inténtalo otra vez.'}
+  }catch(err){m.style.color='var(--bad)';m.textContent=err.message==='PIN'?'PIN incorrecto. Cámbialo abajo.':'No se pudo guardar. El pago NO quedó registrado. Detalle: '+err.message}
 }
 async function delPago(id){
   try{await api({action:'del',id});S.pagos=S.pagos.filter(x=>x.id!==id);delId=null;save();renderAll()}
-  catch(err){delId=null;renderList();setSync('No se pudo borrar. Revisa tu conexión.',true)}
+  catch(err){delId=null;renderList();setSync('No se pudo borrar. Detalle: '+err.message,true)}
 }
 async function saveCfg(c){
   const m=$('cfgmsg');m.style.color='';m.textContent='Guardando…';
   try{await api({action:'cfg',cfg:c});S.cfg=c;save();if(!$('f-monto').value&&c.monto)$('f-monto').value=c.monto;m.textContent='Datos guardados.';setTimeout(()=>m.textContent='',2500);renderAll()}
-  catch(err){m.style.color='var(--bad)';m.textContent='No se pudieron guardar. Revisa tu conexión.'}
+  catch(err){m.style.color='var(--bad)';m.textContent='No se pudieron guardar. Detalle: '+err.message}
 }
 function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
 function renderPend(){
