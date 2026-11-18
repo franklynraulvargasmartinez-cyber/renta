@@ -150,8 +150,12 @@ let PIN='';try{PIN=localStorage.getItem('pagos-renta-pin')||''}catch(e){}
 let loaded=false,dupKey=null;
 
 async function api(body){
-  const payload = encodeURIComponent(JSON.stringify(Object.assign({ pin: PIN }, body)));
-  const r = await fetch(API + '?payload=' + payload);
+  const r = await fetch(API, {
+    method: 'POST',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ pin: PIN }, body))
+  });
   const j = await r.json();
   if(!j.ok) throw new Error(j.error || 'Error');
   return j;
